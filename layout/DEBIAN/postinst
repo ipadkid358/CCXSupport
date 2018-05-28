@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Set toggledropbear to execute as root wheel, no matter who the caller is
+chown 0:0 /usr/bin/toggledropbear
+chmod 6755 /usr/bin/toggledropbear
+
+# Always exit with successful
+exit 0
