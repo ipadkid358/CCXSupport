@@ -3,7 +3,7 @@ ARCHS = arm64
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = CCXSupport
-CCXSupport_FILES = Tweak.x CCUIVPNSettings.m CCUISSHSettings.m
+CCXSupport_FILES = Tweak.x CCUIVPNSetting.m CCUISSHSetting.m CCUIFSCompatibilityLayer.m
 CCXSupport_PRIVATE_FRAMEWORKS = ControlCenterUI
 CCXSupport_CFLAGS = -fobjc-arc
 

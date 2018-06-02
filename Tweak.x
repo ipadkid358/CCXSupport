@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
-#import "CCUIVPNSettings.h"
-#import "CCUISSHSettings.h"
+#import "CCUIFSCompatibilityLayer.h"
+
+static void setupFlipswitchHack();
 
 %hook CCUIRecordScreenShortcut
 
@@ -17,24 +18,43 @@
 %hook CCUIControlCenterSettingsSectionSettings
 
 + (NSArray<Class> *)buttonModuleClasses {
-    NSArray<Class> *originalButtons = %orig;
-    /* original array
-     AirplaneMode
-     WiFi
-     Bluetooth
-     DoNotDisturb
-     Mute
-     OrientationLock
-     LowPowerMode
-     CellularData
-     PersonalHotspot
-     */
+    setupFlipswitchHack();
     
-    Class WifiToggle            = originalButtons[1];
-    Class BluetoothToggle       = originalButtons[2];
-    Class OrientationLockToggle = originalButtons[5];
+    NSArray<NSString *> *disk = [NSArray arrayWithContentsOfFile:@"/var/mobile/Library/Preferences/com.ipadkid.ccxsupport.plist"];
+    NSInteger diskCount = disk.count;
+    NSMutableArray<Class> *classes = [NSMutableArray arrayWithCapacity:diskCount];
+    for (int i = 0; i < diskCount; i++) {
+        Class adding = NSClassFromString(disk[i]);
+        if (adding) {
+            classes[i] = adding;
+        }
+    }
     
-    return @[WifiToggle, BluetoothToggle, [CCUISSHSettings class], [CCUIVPNSettings class], OrientationLockToggle];
+    return [NSArray arrayWithArray:classes];
 }
 
 %end
+
+static void setupFlipswitchHack() {
+    void *flipswitchHandle = dlopen("/Library/MobileSubstrate/DynamicLibraries/Flipswitch.dylib", RTLD_NOW);
+    if (flipswitchHandle) {
+        FSSwitchPanel *flipswitch = [objc_getClass("FSSwitchPanel") sharedPanel];
+        for (NSString *switchIdentifier in flipswitch.switchIdentifiers) {
+            NSString *patchClassName = [switchIdentifier stringByReplacingOccurrencesOfString:@"." withString:@"_"];
+            patchClassName = [NSString stringWithFormat:@"CCUI_FS_%@_Setting", patchClassName];
+            
+            Class flipswitchHackedClass = objc_allocateClassPair(CCUIFSCompatibilityLayer.class, patchClassName.UTF8String, 0);
+            if (flipswitchHackedClass) {
+                objc_registerClassPair(flipswitchHackedClass);
+                
+                Class flipswitchHackedMetaClass = object_getClass(flipswitchHackedClass);
+                
+                MSHookMessageEx(flipswitchHackedMetaClass, @selector(identifier), imp_implementationWithBlock((NSString *) ^(id self) {
+                    return switchIdentifier;
+                }), NULL);
+            }
+        }
+        
+        dlclose(flipswitchHandle);
+    }
+}
