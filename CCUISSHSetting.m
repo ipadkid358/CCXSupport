@@ -1,4 +1,4 @@
-#import "CCUISSHSettings.h"
+#import "CCUISSHSetting.h"
 #import "SharedStringsSSH.h"
 
 #import <spawn.h>
@@ -7,7 +7,7 @@
 + (instancetype)systemGreenColor;
 @end
 
-@implementation CCUISSHSettings
+@implementation CCUISSHSetting
 
 - (void)_updateState {
     NSDictionary *prefsCheck = [NSDictionary dictionaryWithContentsOfFile:@kDropbearPath];
@@ -22,7 +22,7 @@
 
 - (BOOL)_toggleState {
     pid_t pid;
-    char *argv[] = { "toggledropbear", ((self.enabled = !self.enabled) ? "0" : "1"), NULL };
+    char *argv[] = { "toggledropbear", ((self.enabled = !self.enabled) ? "1" : "0"), NULL };
     posix_spawn(&pid, "/usr/bin/toggledropbear", NULL, NULL, argv, NULL);
     // don't really need to wait, but we don't want the switch to be spammed or anything
     waitpid(pid, NULL, 0);

@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
-#import "CCUIVPNSettings.h"
-#import "CCUISSHSettings.h"
+#import "CCUIVPNSetting.h"
+#import "CCUISSHSetting.h"
 
 %hook CCUIRecordScreenShortcut
 
@@ -34,7 +34,7 @@
     Class BluetoothToggle       = originalButtons[2];
     Class OrientationLockToggle = originalButtons[5];
     
-    return @[WifiToggle, BluetoothToggle, [CCUISSHSettings class], [CCUIVPNSettings class], OrientationLockToggle];
+    return @[WifiToggle, BluetoothToggle, [CCUISSHSetting class], [CCUIVPNSetting class], OrientationLockToggle];
 }
 
 %end

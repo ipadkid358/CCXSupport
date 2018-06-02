@@ -1,4 +1,4 @@
-#import "CCUIVPNSettings.h"
+#import "CCUIVPNSetting.h"
 #import <objc/runtime.h>
 #import <dlfcn.h>
 
@@ -19,8 +19,9 @@
 - (void)setVPNActive:(BOOL)active;
 @end
 
-@implementation CCUIVPNSettings {
+@implementation CCUIVPNSetting {
     VPNBundleController *_vpnController;
+    id<NSObject> _vpnNotifToken;
 }
 
 - (void)activate {
@@ -30,13 +31,13 @@
     
     SBTelephonyManager *telephoneInfo = [objc_getClass("SBTelephonyManager") sharedTelephonyManager];
     NSNotificationCenter *notifCenter = [NSNotificationCenter defaultCenter];
-    [notifCenter addObserverForName:@"SBVPNConnectionChangedNotification" object:NULL queue:NULL usingBlock:^(NSNotification *note) {
+    _vpnNotifToken = [notifCenter addObserverForName:@"SBVPNConnectionChangedNotification" object:NULL queue:NULL usingBlock:^(NSNotification *note) {
         self.enabled = telephoneInfo.isUsingVPNConnection;
     }];
 }
 
 - (void)deactivate {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:_vpnNotifToken];
 }
 
 - (BOOL)_toggleState {
