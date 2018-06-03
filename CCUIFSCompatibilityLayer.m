@@ -10,10 +10,23 @@ static __attribute__((constructor)) void setFlipswitchReference() {
     }
 }
 
-@implementation CCUIFSCompatibilityLayer
+@implementation CCUIFSCompatibilityLayer {
+    id<NSObject> _flipswitchNotifToken;
+}
 
 - (void)activate {
+    [NSNotificationCenter.defaultCenter addObserverForName:@"FSSwitchPanelSwitchStateChangedNotification" object:NULL queue:NULL usingBlock:^(NSNotification *note) {
+        NSString *switchIdentifier = self.aggdKey;
+        if ([note.userInfo[@"switchIdentifier"] isEqualToString:switchIdentifier]) {
+            self.enabled = ([flipswitch stateForSwitchIdentifier:switchIdentifier] == FSSwitchStateOn);
+        }
+    }];
+    
     [self _updateState];
+}
+
+- (void)deactivate {
+    [NSNotificationCenter.defaultCenter removeObserver:_flipswitchNotifToken];
 }
 
 - (void)_updateState {
@@ -50,10 +63,12 @@ static __attribute__((constructor)) void setFlipswitchReference() {
 }
 
 - (UIImage *)glyphImageForState:(UIControlState)state {
-    return [flipswitch imageOfSwitchState:state controlState:state forSwitchIdentifier:self.aggdKey usingTemplate:[NSBundle bundleWithPath:@"/var/mobile/com.rpetrich.flipcontrolcenter.topshelf"]];
+    NSBundle *template = [NSBundle bundleWithPath:@"/Library/Application Support/CCXSupport/FlipSwitchTemplate.bundle"];
+    return [flipswitch imageOfSwitchState:state controlState:state forSwitchIdentifier:self.aggdKey usingTemplate:template];
 }
 
 - (UIColor *)selectedStateColor {
+    // TODO: Set color based on Preferences
     return [UIColor orangeColor];
 }
 
